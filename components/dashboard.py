@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 from core.db import get_db_connection
+from utils.finance_summary import get_budget_status
 
 def render_dashboard():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
@@ -36,6 +37,16 @@ def render_dashboard():
         st.metric("Số dư", f"{balance:,.0f} VND", delta_color="normal" if balance >= 0 else "inverse")
 
     st.subheader("Phân bổ chi tiêu theo danh mục")
+    
+    budget, total_expense, percentage = get_budget_status()
+    if budget:
+        st.metric("Ngân sách tháng", f"{budget:,.0f} VND")
+        st.metric("Đã chi", f"{total_expense:,.0f} VND", delta=f"{percentage:.1f}%")
+        if percentage > 100:
+            st.error("⚠️ VƯỢT NGÂN SÁCH! Cần điều chỉnh ngay.")
+        elif percentage > 80:
+            st.warning("⚠️ Đã chi hơn 80% ngân sách.")
+    
     expense_df = df[df['type'] == 'Chi tiêu']
     if not expense_df.empty:
         fig_pie = px.pie(

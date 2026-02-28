@@ -2,8 +2,8 @@ from datetime import datetime
 import re
 import sqlite3
 import streamlit as st
-from core.llm_chains import response_chain, parse_chain
-from utils.finance_summary import get_finance_summary
+from core.llm_chains import response_chain, parse_chain, emotion_chain
+from utils.finance_summary import extract_numbers, get_budget_status, get_finance_summary
 from core.db import get_db_connection
 
 def render_chat():
@@ -23,12 +23,40 @@ def render_chat():
         
         finance_summary = get_finance_summary(days=30)
         with st.chat_message("assistant"):
-            with st.spinner("Coach đang đưa ra lời khuyên..."):
+            with st.spinner("Coach đang phân tích..."):
+                
+                finance_summary_text = get_finance_summary(days=30)
+                finance_data = extract_numbers(finance_summary_text)
+                
+                print("Extracted finance data:", finance_data)
+                
                 response = response_chain.invoke({
                     "user_input": user_input,
-                    "finance_summary": finance_summary
+                    "finance_summary": finance_summary,
+                    "income": finance_data["income"],
+                    "expense": finance_data["expense"],
+                    "balance": finance_data["balance"]
                 })
                 full_response = response.content
+                
+                try:
+                    emotion = emotion_chain.invoke({"user_input": user_input}).content.strip().lower()
+                    if emotion not in ["vui", "buồn", "stress", "tiếc nuối", "impulsive", "bình thường", "khác"]:
+                        emotion = "khác"
+                    
+                    emotion_display = {
+                        "vui": "Vui vẻ",
+                        "buồn": "Buồn bã",
+                        "stress": "Stress",
+                        "tiếc nuối": "Tiếc nuối",
+                        "impulsive": "Bốc đồng",
+                        "bình thường": "Bình thường",
+                        "khác": "Khác"
+                    }.get(emotion, "Khác")
+                    
+                    full_response += f"\n\n**Cảm xúc của bạn hôm nay**: {emotion_display}"
+                except Exception as e:
+                    print("Emotion detection error:", str(e))
 
                 saved_count = 0
                 if re.search(r'\d+[.,]?\d*', user_input):
@@ -62,6 +90,19 @@ def render_chat():
                     except Exception as e:
                         print("Structured parse error:", str(e))
 
-                st.markdown(full_response)
+            st.markdown(full_response)
+            budget, total_expense, percentage = get_budget_status()
+            if budget:
+                status_text = f"\n\n**Ngân sách tháng này**: {budget:,.0f} VND\n"
+                status_text += f"Đã chi: {total_expense:,.0f} VND ({percentage:.1f}%)\n"
+                
+                if percentage > 100:
+                    status_text += "⚠️ **VƯỢT NGÂN SÁCH** – Hãy kiểm soát chi tiêu ngay!"
+                elif percentage > 80:
+                    status_text += "⚠️ Đã chi hơn 80% ngân sách – Cẩn thận nhé!"
+                elif percentage > 50:
+                    status_text += "Đã chi hơn 50% – Tiếp tục theo dõi tốt đấy!"
+                
+                full_response += status_text
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})

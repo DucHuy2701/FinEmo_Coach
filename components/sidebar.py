@@ -7,8 +7,8 @@ from core.db import get_db_connection
 def render_sidebar():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
     c = conn.cursor()
-    st.header("Nhật ký chi tiêu nhanh")
     
+    st.header("Nhật ký chi tiêu")
     with st.form(key="add_transaction"):
         col1, col2 = st.columns(2)
         with col1:
@@ -28,5 +28,36 @@ def render_sidebar():
                 VALUES (?, ?, ?, ?, ?)
             ''', (date.isoformat(), amount, category, trans_type, description))
             conn.commit()
-            conn.close()
             st.success(f"Đã thêm: {amount:,.0f} VND - {category} ({trans_type})")
+    if st.button("Cập nhật dữ liệu (refresh)"):
+        st.rerun()
+    
+    st.markdown("---")
+    st.subheader("Đặt ngân sách tháng")
+
+    current_month = datetime.today().strftime('%Y-%m')
+
+    c.execute("SELECT budget_amount FROM budget WHERE month_year = ?", (current_month,))
+    existing_budget = c.fetchone()
+
+    if existing_budget:
+        st.info(f"Ngân sách tháng {current_month}: {existing_budget[0]:,.0f} VND")
+        if st.button("Chỉnh sửa ngân sách"):
+            st.session_state.edit_budget = True
+    else:
+        st.session_state.edit_budget = True
+
+    if st.session_state.get('edit_budget', False):
+        budget_amount = st.number_input("Ngân sách tháng này (VND)", min_value=0.0, step=100000.0, format="%.0f")
+        if st.button("Lưu ngân sách"):
+            if existing_budget:
+                c.execute("UPDATE budget SET budget_amount = ? WHERE month_year = ?", (budget_amount, current_month))
+            else:
+                c.execute("INSERT INTO budget (month_year, budget_amount, created_at) VALUES (?, ?, ?)",
+                        (current_month, budget_amount, datetime.today().isoformat()))
+            conn.commit()
+            conn.close()
+            
+            st.success(f"Đã lưu ngân sách tháng {current_month}: {budget_amount:,.0f} VND")
+            del st.session_state.edit_budget
+            st.rerun()

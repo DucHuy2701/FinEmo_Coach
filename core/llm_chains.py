@@ -5,6 +5,7 @@ from core.models import TransactionOutput
 
 llm = ChatOllama(model="qwen2.5:7b", temperature=0.7)
 
+#suggestion
 response_prompt = ChatPromptTemplate.from_messages([
     ("system", """
 Bạn là FinEmo Coach - người bạn hỗ trợ tài chính và cảm xúc.
@@ -12,13 +13,33 @@ Bạn là FinEmo Coach - người bạn hỗ trợ tài chính và cảm xúc.
 Trả lời thân thiện, đồng cảm, ngắn gọn.
 Dữ liệu tài chính gần đây:
 {{finance_summary}}
-Đồng cảm với cảm xúc người dùng, đưa lời khuyên cân bằng tài chính + tinh thần.
+
+Số liệu chính xác (dùng những số này khi trả lời, KHÔNG bịa, KHÔNG dùng placeholder):
+- Thu nhập: {income} VND
+- Chi tiêu: {expense} VND
+- Số dư: {balance} VND
+
+**QUY TẮC:**
+- Khi người dùng hỏi tổng thu/chi tháng, thu nhập, chi tiêu, số dư → **PHẢI dùng đúng số trên**, ví dụ: "Tổng thu nhập là {income} VND, chi tiêu là {expense} VND".
+- Nếu số bằng 0 → nói "Hiện chưa có giao dịch tháng này".
+- Đồng cảm cảm xúc trước, sau đó đưa lời khuyên cân bằng.
+
+**Cảm xúc hiện tại của người dùng**: {{emotion}}
+
+Dựa vào cảm xúc để điều chỉnh lời khuyên:
+- Nếu stress/tiếc nuối/buồn → ưu tiên khuyên thư giãn miễn phí, tránh cắt chi mạnh.
+- Nếu vui → khen ngợi và khuyến khích tiết kiệm.
+- Nếu impulsive → nhắc nhở kiểm soát chi tiêu bốc đồng.
+- Bình thường/khác → khuyên cân bằng chung.
+Đồng cảm trước, sau đó đưa lời khuyên thực tế.
+
 Nếu họ đề cập chi tiêu/thu nhập, bạn có thể nhắc lại để xác nhận.
     """),
     ("human", "{user_input}")
 ])
 response_chain = response_prompt | llm
 
+#parsed transactions
 parse_prompt = ChatPromptTemplate.from_messages([
     ("system", """
 Bạn là trợ lý trích xuất thông tin giao dịch từ tin nhắn người dùng.
@@ -30,7 +51,7 @@ Hướng dẫn chi tiết:
 - amount: chỉ lấy số tiền, chuyển về số nguyên (80k → 80000, 3 triệu → 3000000, 1.2tr → 1200000).
 - type: PHẢI PHÂN BIỆT DỰA VÀO NGỮ CẢNH:
   - "Thu nhập" nếu có từ: nhận, lương, thưởng, cầm tiền, được, vào tài khoản, bonus...
-  - "Chi tiêu" nếu có từ: mua, chi, tiêu, ra làm, hết, xài, shopping, tốn, mất...
+  - "Chi tiêu" nếu có từ: mua, chi, tiêu, ra làm, hết, xài, shopping, tốn, mất, ăn, nhậu, chơi bời...
   - Nếu câu có cả thu và chi → tách riêng từng transaction.
 - category: chọn chính xác nhất từ danh sách: Ăn uống, Giải trí, Di chuyển, Nhà cửa, Tiết kiệm, Thu nhập lương, Mua sắm, Khác.
   Ví dụ: gear, đồ công nghệ → Mua sắm; ăn uống → Ăn uống; lương/thưởng → Thu nhập lương.
@@ -55,5 +76,16 @@ Few-shot examples (học theo cách này):
 """),
     ("human", "{user_input}")
 ])
-
 parse_chain = parse_prompt | llm.with_structured_output(TransactionOutput)
+
+#emotion
+emotion_prompt = ChatPromptTemplate.from_messages([
+    ("system", """
+Bạn là trợ lý trích xuất cảm xúc từ tin nhắn người dùng.
+Phân loại cảm xúc chính từ tin nhắn người dùng.
+Trả về chỉ MỘT từ duy nhất: vui, buồn, stress, tiếc nuối, impulsive, bình thường, khác.
+Không giải thích, không thêm chữ.
+    """),
+    ("human", "{user_input}")
+])
+emotion_chain = emotion_prompt | llm
