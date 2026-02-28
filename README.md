@@ -37,3 +37,45 @@ ollama pull qwen2.5:7b
 
 # 4. Chạy app
 streamlit run app.py
+```
+
+Mở browser: http://localhost:8501
+
+### HƯỚNG DẪN SỬ DỤNG
+1. Nhập thủ công: Dùng form trong sidebar → "Thêm ngay".
+2. Chat với AI: Gõ tự nhiên (ví dụ: "vừa nhận lương 15tr, tiêu 2tr ăn uống") → AI tự parse, lưu DB, và đưa lời khuyên.
+3. Xem lịch sử: Mở tab "Lịch sử giao dịch" → tick checkbox để xóa.
+4. Dashboard: Tab "Dashboard tài chính" → biểu đồ & số liệu 30 ngày.
+
+### TECH STACK
+- Frontend: Streamlit
+- AI: Ollama + LangChain (model Qwen2.5 7B local)
+- Database: SQLite
+- Data & Chart: Pandas, Plotly Express
+
+### CẤU TRÚC DỰ ÁN
+finemo-coach/
+├── app.py               # Entry point
+├── requirements.txt     # Dependencies
+├── finemo.db            # SQLite database (tự tạo)
+├── core/                # Logic cốt lõi
+│   ├── db.py
+│   ├── llm_chains.py
+│   └── models.py
+├── components/          # UI components
+│   ├── sidebar.py
+│   ├── history.py
+│   ├── dashboard.py
+│   └── chat.py
+└── utils/
+    └── finance_summary.py
+
+### PHÁT TRIỂN & ĐÓNG GÓP
+- Fork repo → tạo branch feature/ten-tinh-nang
+- Commit với message rõ ràng
+- Pull Request với mô tả thay đổi
+- Coding style: Black + Ruff
+
+### THANKS
+Cảm ơn cộng đồng Ollama, LangChain, Streamlit đã cung cấp công cụ miễn phí tuyệt vời.
+Nếu bạn dùng thử và thấy hay, hãy star repo hoặc share cảm nhận nhé! ❤️
