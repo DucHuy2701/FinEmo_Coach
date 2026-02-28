@@ -1,3 +1,5 @@
+from datetime import datetime
+import re
 import sqlite3
 import streamlit as st
 from core.llm_chains import response_chain, parse_chain
@@ -21,31 +23,45 @@ def render_chat():
         
         finance_summary = get_finance_summary(days=30)
         with st.chat_message("assistant"):
-            with st.spinner("Coach đang suy nghĩ..."):
+            with st.spinner("Coach đang đưa ra lời khuyên..."):
                 response = response_chain.invoke({
                     "user_input": user_input,
                     "finance_summary": finance_summary
                 })
                 full_response = response.content
-                
-                try:
-                    parsed_output = parse_chain.invoke({"user_input": user_input})
-                    if parsed_output.has_transaction and parsed_output.transactions:
-                        conn = sqlite3.connect('finemo.db', check_same_thread=False)
-                        c = conn.cursor()
-                        saved_count = 0
-                        for tx in parsed_output.transactions:
-                            c.execute('''
-                                INSERT INTO transactions (date, amount, category, type, description)
-                                VALUES (?, ?, ?, ?, ?)
-                            ''', (tx.date, tx.amount, tx.category, tx.type, tx.description))
-                            conn.commit()
-                            conn.close()
-                            saved_count += 1
-                        if saved_count > 0:
-                            full_response += f"\n\n(Đã tự động ghi nhận {saved_count} giao dịch!)"
-                except Exception as e:
-                    print("Structured parse error:", str(e))
-                
+
+                saved_count = 0
+                if re.search(r'\d+[.,]?\d*', user_input):
+                    try:
+                        parsed_output = parse_chain.invoke({"user_input": user_input})
+                        print("Structured parsed:", parsed_output)
+
+                        if parsed_output.has_transaction and parsed_output.transactions:
+                            today_str = datetime.today().strftime('%Y-%m-%d')
+                            
+                            for tx in parsed_output.transactions:
+                                if tx.date.lower() in ["hôm nay", "today", "ngày hôm nay", "2026-02-26"]:
+                                    tx.date = today_str
+                                
+                                conn_local = sqlite3.connect('finemo.db')
+                                c_local = conn_local.cursor()
+                                c_local.execute('''
+                                    INSERT INTO transactions (date, amount, category, type, description)
+                                    VALUES (?, ?, ?, ?, ?)
+                                ''', (
+                                    tx.date,
+                                    tx.amount,
+                                    tx.category,
+                                    tx.type,
+                                    tx.description
+                                ))
+                                conn_local.commit()
+                                conn_local.close()
+                            saved_count = len(parsed_output.transactions)
+                            full_response += f"\n\n(Đã tự động ghi nhận {saved_count} giao dịch từ tin nhắn!)"
+                    except Exception as e:
+                        print("Structured parse error:", str(e))
+
                 st.markdown(full_response)
+
         st.session_state.messages.append({"role": "assistant", "content": full_response})

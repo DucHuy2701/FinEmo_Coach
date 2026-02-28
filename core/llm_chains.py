@@ -11,7 +11,7 @@ Bạn là FinEmo Coach - người bạn hỗ trợ tài chính và cảm xúc.
 **Trả lời hoàn toàn bằng TIẾNG VIỆT, không dùng tiếng Trung hoặc tiếng Anh trừ khi người dùng yêu cầu.**
 Trả lời thân thiện, đồng cảm, ngắn gọn.
 Dữ liệu tài chính gần đây:
-{finance_summary}
+{{finance_summary}}
 Đồng cảm với cảm xúc người dùng, đưa lời khuyên cân bằng tài chính + tinh thần.
 Nếu họ đề cập chi tiêu/thu nhập, bạn có thể nhắc lại để xác nhận.
     """),
@@ -20,13 +20,13 @@ Nếu họ đề cập chi tiêu/thu nhập, bạn có thể nhắc lại để 
 response_chain = response_prompt | llm
 
 parse_prompt = ChatPromptTemplate.from_messages([
-    ("system", f"""
+    ("system", """
 Bạn là trợ lý trích xuất thông tin giao dịch từ tin nhắn người dùng.
 Trích xuất tất cả giao dịch có trong tin nhắn (có thể nhiều).
 Nếu không có giao dịch nào → {{"has_transaction": false, "transactions": []}}
 
 Hướng dẫn chi tiết:
-- date: dùng ngày hôm nay nếu không được đề cập rõ (định dạng YYYY-MM-DD, ví dụ {datetime.today().strftime('%Y-%m-%d')}).
+- date: **LUÔN DÙNG NGÀY HÔM NAY** nếu không được đề cập rõ (định dạng YYYY-MM-DD). Không dùng ngày từ ví dụ, phải là ngày thực tế hiện tại.
 - amount: chỉ lấy số tiền, chuyển về số nguyên (80k → 80000, 3 triệu → 3000000, 1.2tr → 1200000).
 - type: PHẢI PHÂN BIỆT DỰA VÀO NGỮ CẢNH:
   - "Thu nhập" nếu có từ: nhận, lương, thưởng, cầm tiền, được, vào tài khoản, bonus...
@@ -39,16 +39,16 @@ Hướng dẫn chi tiết:
 
 Few-shot examples (học theo cách này):
 - Input: "Hôm nay ăn phở 80k với bạn"
-  Output: {{"has_transaction": true, "transactions": [{{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 80000, "category": "Ăn uống", "type": "Chi tiêu", "description": "ăn phở với bạn"}}]}}
+  Output: {{"has_transaction": true, "transactions": [{{"date": "hôm nay"", "amount": 80000, "category": "Ăn uống", "type": "Chi tiêu", "description": "ăn phở với bạn"}}]}}
 
 - Input: "Vừa nhận thưởng 4 triệu, sau đó đi mua sắm hết 2 triệu"
-  Output: {{"has_transaction": true, "transactions": [{{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 4000000, "category": "Thu nhập lương", "type": "Thu nhập", "description": "nhận thưởng"}}, {{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 2000000, "category": "Mua sắm", "type": "Chi tiêu", "description": "đi mua sắm"}}]}}
+  Output: {{"has_transaction": true, "transactions": [{{"date": "hôm nay"", "amount": 4000000, "category": "Thu nhập lương", "type": "Thu nhập", "description": "nhận thưởng"}}, {{"date": "2026-02-26", "amount": 2000000, "category": "Mua sắm", "type": "Chi tiêu", "description": "đi mua sắm"}}]}}
 
 - Input: "Vừa chi 1tr thì sếp gọi nhận thưởng 2tr"
-  Output: {{"has_transaction": true, "transactions": [{{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 1000000, "category": "Khác", "type": "Chi tiêu", "description": "chi tiêu"}}, {{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 2000000, "category": "Thu nhập lương", "type": "Thu nhập", "description": "thưởng"}}]}}
+  Output: {{"has_transaction": true, "transactions": [{{"date": "hôm nay"", "amount": 1000000, "category": "Khác", "type": "Chi tiêu", "description": "chi tiêu"}}, {{"date": "2026-02-26", "amount": 2000000, "category": "Thu nhập lương", "type": "Thu nhập", "description": "thưởng"}}]}}
 
 - Input: "vừa cầm tiền thưởng là ra làm ngay 3 triệu tiền gear rồi, thích quá"
-  Output: {{"has_transaction": true, "transactions": [{{"date": "{datetime.today().strftime('%Y-%m-%d')}", "amount": 3000000, "category": "Mua sắm", "type": "Chi tiêu", "description": "mua tiền gear"}}]}}
+  Output: {{"has_transaction": true, "transactions": [{{"date": "hôm nay"", "amount": 3000000, "category": "Mua sắm", "type": "Chi tiêu", "description": "mua tiền gear"}}]}}
 
 - Input: "Buồn quá, không mua gì cả"
   Output: {{"has_transaction": false, "transactions": []}}
