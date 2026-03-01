@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from core.db import get_db_connection
 from utils.finance_summary import get_budget_status
+from utils.helpers import format_vnd
 
 def render_dashboard():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
@@ -30,11 +31,11 @@ def render_dashboard():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Tổng thu nhập", f"{total_income:,.0f} VND", delta_color="normal")
+        st.metric("Tổng thu nhập", format_vnd(total_income), delta_color="normal")
     with col2:
-        st.metric("Tổng chi tiêu", f"{total_expense:,.0f} VND", delta_color="inverse")
+        st.metric("Tổng chi tiêu", format_vnd(total_expense), delta_color="inverse")
     with col3:
-        st.metric("Số dư", f"{balance:,.0f} VND", delta_color="normal" if balance >= 0 else "inverse")
+        st.metric("Số dư", format_vnd(balance), delta_color="normal" if balance >= 0 else "inverse")
 
     st.subheader("Phân bổ chi tiêu theo danh mục")
     

@@ -3,6 +3,7 @@ import sqlite3
 import streamlit as st
 from datetime import datetime
 from core.db import get_db_connection
+from utils.helpers import format_vnd
 
 def render_sidebar():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
@@ -28,7 +29,7 @@ def render_sidebar():
                 VALUES (?, ?, ?, ?, ?)
             ''', (date.isoformat(), amount, category, trans_type, description))
             conn.commit()
-            st.success(f"Đã thêm: {amount:,.0f} VND - {category} ({trans_type})")
+            st.success(f"Đã thêm: {format_vnd(amount)} VND - {category} ({trans_type})")
     if st.button("Cập nhật dữ liệu (refresh)"):
         st.rerun()
     

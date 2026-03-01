@@ -3,6 +3,7 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 from core.db import get_db_connection
+from utils.helpers import format_vnd
 
 def render_history():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
@@ -75,7 +76,6 @@ def render_history():
             key="filtered_transaction_table"
         )
 
-        # Xóa các dòng được chọn
         selected_rows = edited_df[edited_df['select'] == True]
         selected_ids = selected_rows['id'].tolist()
 
