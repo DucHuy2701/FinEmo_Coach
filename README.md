@@ -45,7 +45,7 @@ Mở browser: http://localhost:8501
 1. Nhập thủ công: Dùng form trong sidebar → "Thêm ngay".
 2. Chat với AI: Gõ tự nhiên (ví dụ: "vừa nhận lương 15tr, tiêu 2tr ăn uống") → AI tự parse, lưu DB, và đưa lời khuyên.
 3. Xem lịch sử: Mở tab "Lịch sử giao dịch" → tick checkbox để xóa.
-4. Dashboard: Tab "Dashboard tài chính" → biểu đồ & số liệu 30 ngày.
+4. Dashboard: Tab "Dashboard tài chính" → biểu đồ & số liệu 30 ngày, có thể export/import CSV để theo dõi.
 
 ### TECH STACK
 - Frontend: Streamlit
