@@ -17,6 +17,5 @@ with tab2:
 with tab3:
     render_dashboard()
 
-# Sidebar luôn hiển thị
 with st.sidebar:
     render_sidebar()
