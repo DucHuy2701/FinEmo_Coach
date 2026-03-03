@@ -25,6 +25,16 @@ c.execute('''
 ''')
 conn.commit()
 
+c.execute('''
+    CREATE TABLE IF NOT EXISTS chat_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        role TEXT NOT NULL,          -- "user" hoặc "assistant"
+        content TEXT NOT NULL,
+        timestamp TEXT DEFAULT (datetime('now', 'localtime'))
+    )
+''')
+conn.commit()
+
 def get_db_connection():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
     return conn

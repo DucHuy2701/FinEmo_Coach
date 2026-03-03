@@ -5,12 +5,13 @@ import streamlit as st
 from core.llm_chains import response_chain, parse_chain, emotion_chain
 from utils.finance_summary import extract_numbers, get_budget_status, get_finance_summary
 from core.db import get_db_connection
+from utils.helpers import load_chat_history, save_message
 
 def render_chat():
     st.title("FinEmo Coach")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = load_chat_history()
     
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -18,6 +19,7 @@ def render_chat():
     
     if user_input := st.chat_input("Bạn đang cảm thấy thế nào hôm nay? Hay có chi tiêu gì muốn cập nhật không?"):
         st.session_state.messages.append({"role": "user", "content": user_input})
+        save_message("user", user_input)
         with st.chat_message("user"):
             st.markdown(user_input)
         
@@ -27,8 +29,6 @@ def render_chat():
                 
                 finance_summary_text = get_finance_summary(days=30)
                 finance_data = extract_numbers(finance_summary_text)
-                
-                print("Extracted finance data:", finance_data)
                 
                 response = response_chain.invoke({
                     "user_input": user_input,
@@ -106,3 +106,4 @@ def render_chat():
                 full_response += status_text
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+        save_message("assistant", full_response)
