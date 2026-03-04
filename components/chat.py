@@ -13,9 +13,13 @@ def render_chat():
     if "messages" not in st.session_state:
         st.session_state.messages = load_chat_history()
     
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    #scroll
+    chat_container = st.container(height=500)
+
+    with chat_container:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
     
     if user_input := st.chat_input("Bạn đang cảm thấy thế nào hôm nay? Hay có chi tiêu gì muốn cập nhật không?"):
         st.session_state.messages.append({"role": "user", "content": user_input})
@@ -117,3 +121,12 @@ def render_chat():
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
         save_message("assistant", full_response)
+    js_scroll = """
+    <script>
+        const chatContainer = parent.document.querySelector('.stChatMessageContainer');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+    """
+    st.markdown(js_scroll, unsafe_allow_html=True)

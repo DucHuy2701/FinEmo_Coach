@@ -59,6 +59,18 @@ Mở browser: http://localhost:8501
 - Pull Request với mô tả thay đổi
 - Coding style: Black + Ruff
 
+### DOCKERIZE
+1. Cài Docker Desktop: https://www.docker.com/products/docker-desktop
+2. Tải dự án:
+   git clone https://github.com/DucHuy2701/finemo-coach.git
+   cd finemo-coach
+3. Chạy:
+   docker compose up
+4. Mở trình duyệt: http://localhost:8501
+5. Update app mới:
+   docker compose pull
+   docker compose up -d
+
 ### THANKS
 Cảm ơn cộng đồng Ollama, LangChain, Streamlit đã cung cấp công cụ miễn phí tuyệt vời.
 Nếu bạn dùng thử và thấy hay, hãy star repo hoặc share cảm nhận nhé! ❤️
