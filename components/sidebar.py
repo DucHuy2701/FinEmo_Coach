@@ -4,6 +4,7 @@ import streamlit as st
 from datetime import datetime
 from core.db import get_db_connection
 from utils.helpers import format_vnd
+from core.llm_chains import classify_chain
 
 def render_sidebar():
     conn = sqlite3.connect('finemo.db', check_same_thread=False)
@@ -21,6 +22,17 @@ def render_sidebar():
         ])
         date = st.date_input("Ngày", value=datetime.today())
         description = st.text_input("Ghi chú / Mô tả")
+        
+        suggested_category = None
+        if description:
+            try:
+                suggested_category = classify_chain.invoke({"description": description}).content.strip()
+                if suggested_category not in ["Ăn uống", "Giải trí", "Di chuyển", "Nhà cửa", "Tiết kiệm", "Thu nhập lương", "Mua sắm", "Khác"]:
+                    suggested_category = "Khác"
+                st.info(f"Gợi ý danh mục: {suggested_category}")
+            except:
+                st.info("Không thể gợi ý danh mục lúc này.")
+        
         submitted = st.form_submit_button("Thêm ngay")
         
         if submitted and amount > 0:

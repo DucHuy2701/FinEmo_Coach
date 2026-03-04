@@ -89,3 +89,23 @@ Không giải thích, không thêm chữ.
     ("human", "{user_input}")
 ])
 emotion_chain = emotion_prompt | llm
+
+#classify
+classify_prompt = ChatPromptTemplate.from_messages([
+    ("system", """
+Bạn là trợ lý phân loại danh mục chi tiêu.
+Từ mô tả giao dịch, chọn đúng **1 danh mục** duy nhất từ danh sách sau:
+Ăn uống, Giải trí, Di chuyển, Nhà cửa, Tiết kiệm, Thu nhập lương, Mua sắm, Khác
+
+Trả về **chỉ tên danh mục**, không thêm chữ, không giải thích.
+Ví dụ:
+- "ăn phở sáng" → Ăn uống
+- "mua điện thoại mới" → Mua sắm
+- "nhận lương tháng 3" → Thu nhập lương
+- "mua vé xem phim" → Giải trí
+- "chuyển tiền tiết kiệm" → Tiết kiệm
+    """),
+    ("human", "{description}")
+])
+
+classify_chain = classify_prompt | llm

@@ -2,7 +2,7 @@ from datetime import datetime
 import re
 import sqlite3
 import streamlit as st
-from core.llm_chains import response_chain, parse_chain, emotion_chain
+from core.llm_chains import response_chain, parse_chain, emotion_chain, classify_chain
 from utils.finance_summary import extract_numbers, get_budget_status, get_finance_summary
 from core.db import get_db_connection
 from utils.helpers import load_chat_history, save_message
@@ -70,6 +70,16 @@ def render_chat():
                             for tx in parsed_output.transactions:
                                 if tx.date.lower() in ["hôm nay", "today", "ngày hôm nay", "2026-02-26"]:
                                     tx.date = today_str
+                                
+                                try:
+                                    suggested_category = classify_chain.invoke({"description": tx.description}).content.strip()
+                                    if suggested_category in ["Ăn uống", "Giải trí", "Di chuyển", "Nhà cửa", "Tiết kiệm", "Thu nhập lương", "Mua sắm", "Khác"]:
+                                        tx.category = suggested_category
+                                    else:
+                                        tx.category = "Khác"
+                                except Exception as e:
+                                    print("Lỗi phân loại danh mục:", str(e))
+                                    tx.category = "Khác"
                                 
                                 conn_local = sqlite3.connect('finemo.db')
                                 c_local = conn_local.cursor()
