@@ -53,23 +53,6 @@ Mở browser: http://localhost:8501
 - Database: SQLite
 - Data & Chart: Pandas, Plotly Express
 
-### CẤU TRÚC DỰ ÁN
-finemo-coach/
-├── app.py               # Entry point
-├── requirements.txt     # Dependencies
-├── finemo.db            # SQLite database (tự tạo)
-├── core/                # Logic cốt lõi
-│   ├── db.py
-│   ├── llm_chains.py
-│   └── models.py
-├── components/          # UI components
-│   ├── sidebar.py
-│   ├── history.py
-│   ├── dashboard.py
-│   └── chat.py
-└── utils/
-    └── finance_summary.py
-
 ### PHÁT TRIỂN & ĐÓNG GÓP
 - Fork repo → tạo branch feature/ten-tinh-nang
 - Commit với message rõ ràng
